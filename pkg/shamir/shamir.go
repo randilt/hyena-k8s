@@ -1,5 +1,13 @@
-// Copyright IBM Corp. 2016, 2025
-// SPDX-License-Identifier: MPL-2.0
+// This file is derived from HashiCorp Vault's Shamir Secret Sharing implementation:
+// https://github.com/hashicorp/vault/blob/main/shamir/shamir.go
+//
+// Original work Copyright (c) HashiCorp, Inc.
+// Licensed under the Mozilla Public License, Version 2.0 (MPL-2.0)
+//
+// This file must remain under MPL-2.0 as required by the original license.
+// See https://www.mozilla.org/en-US/MPL/2.0/ for full license text.
+//
+// Note: The rest of this project may use a different license.
 
 package shamir
 
