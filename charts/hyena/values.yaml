@@ -34,6 +34,35 @@ shareServer:
       memory: "128Mi"
       cpu: "200m"
 
+# Secret Manager Configuration
+secretManager:
+  enabled: true
+
+  image:
+    repository: hyena/secret-manager
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # HTTP port
+  port: 8080
+
+  # gRPC port
+  grpcPort: 9090
+
+  # Service type (ClusterIP, NodePort, LoadBalancer)
+  service:
+    type: NodePort
+    nodePort: 30080
+
+  # Resource limits
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
 # Sidecar (Init Container) Configuration
 sidecar:
   image:
@@ -65,6 +94,10 @@ sidecar:
 demoApp:
   enabled: true
 
+  # List of secrets to fetch (comma-separated)
+  # Format: "secret1,secret2" or "secret1:/path1,secret2:/path2"
+  secrets: "db-password,api-key"
+
   image:
     repository: hyena/demo-app
     tag: latest
@@ -91,7 +124,7 @@ demoApp:
   service:
     type: NodePort
     port: 8080
-    nodePort: 30080
+    nodePort: 30081
 
 # Secret to split (THIS SHOULD BE PROVIDED DURING INSTALLATION)
 # Example: helm install hyena ./charts/hyena --set-file secret.data=./my-secret.txt

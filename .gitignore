@@ -1,0 +1,75 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Build artifacts
+/bin/
+/build/
+/dist/
+cmd/*/share-server
+cmd/*/sidecar
+cmd/*/secret-manager
+cmd/*/split-secret
+examples/*/demo-app
+
+# Dependency directories
+vendor/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Secrets and sensitive data
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+/shares/*.b64
+/shares/
+*.token
+secrets/
+.env
+.env.*
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Helm
+charts/**/charts/
+charts/**/*.tgz
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Proto generated files (optional - uncomment if you regenerate often)
+# *.pb.go
+# *_grpc.pb.go
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini

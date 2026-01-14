@@ -21,13 +21,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// GetShareRequest contains the identity of the requester
+// GetShareRequest contains the identity of the requester and secret name
 type GetShareRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// requester_identity is the ServiceAccount identity (namespace:sa-name)
 	RequesterIdentity string `protobuf:"bytes,1,opt,name=requester_identity,json=requesterIdentity,proto3" json:"requester_identity,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// secret_name identifies which secret to retrieve the share for
+	SecretName    string `protobuf:"bytes,2,opt,name=secret_name,json=secretName,proto3" json:"secret_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetShareRequest) Reset() {
@@ -63,6 +65,13 @@ func (*GetShareRequest) Descriptor() ([]byte, []int) {
 func (x *GetShareRequest) GetRequesterIdentity() string {
 	if x != nil {
 		return x.RequesterIdentity
+	}
+	return ""
+}
+
+func (x *GetShareRequest) GetSecretName() string {
+	if x != nil {
+		return x.SecretName
 	}
 	return ""
 }
@@ -122,6 +131,231 @@ func (x *GetShareResponse) GetServerId() string {
 	return ""
 }
 
+// StoreShareRequest stores a share on this server
+type StoreShareRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// secret_name identifies which secret this share belongs to
+	SecretName string `protobuf:"bytes,1,opt,name=secret_name,json=secretName,proto3" json:"secret_name,omitempty"`
+	// share is the share data to store
+	Share []byte `protobuf:"bytes,2,opt,name=share,proto3" json:"share,omitempty"`
+	// requester_identity is the admin identity
+	RequesterIdentity string `protobuf:"bytes,3,opt,name=requester_identity,json=requesterIdentity,proto3" json:"requester_identity,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *StoreShareRequest) Reset() {
+	*x = StoreShareRequest{}
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StoreShareRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StoreShareRequest) ProtoMessage() {}
+
+func (x *StoreShareRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StoreShareRequest.ProtoReflect.Descriptor instead.
+func (*StoreShareRequest) Descriptor() ([]byte, []int) {
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *StoreShareRequest) GetSecretName() string {
+	if x != nil {
+		return x.SecretName
+	}
+	return ""
+}
+
+func (x *StoreShareRequest) GetShare() []byte {
+	if x != nil {
+		return x.Share
+	}
+	return nil
+}
+
+func (x *StoreShareRequest) GetRequesterIdentity() string {
+	if x != nil {
+		return x.RequesterIdentity
+	}
+	return ""
+}
+
+// StoreShareResponse confirms storage
+type StoreShareResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StoreShareResponse) Reset() {
+	*x = StoreShareResponse{}
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StoreShareResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StoreShareResponse) ProtoMessage() {}
+
+func (x *StoreShareResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StoreShareResponse.ProtoReflect.Descriptor instead.
+func (*StoreShareResponse) Descriptor() ([]byte, []int) {
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *StoreShareResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *StoreShareResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+// DeleteShareRequest removes a share
+type DeleteShareRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// secret_name identifies which secret to delete
+	SecretName string `protobuf:"bytes,1,opt,name=secret_name,json=secretName,proto3" json:"secret_name,omitempty"`
+	// requester_identity is the admin identity
+	RequesterIdentity string `protobuf:"bytes,2,opt,name=requester_identity,json=requesterIdentity,proto3" json:"requester_identity,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *DeleteShareRequest) Reset() {
+	*x = DeleteShareRequest{}
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteShareRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteShareRequest) ProtoMessage() {}
+
+func (x *DeleteShareRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteShareRequest.ProtoReflect.Descriptor instead.
+func (*DeleteShareRequest) Descriptor() ([]byte, []int) {
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DeleteShareRequest) GetSecretName() string {
+	if x != nil {
+		return x.SecretName
+	}
+	return ""
+}
+
+func (x *DeleteShareRequest) GetRequesterIdentity() string {
+	if x != nil {
+		return x.RequesterIdentity
+	}
+	return ""
+}
+
+// DeleteShareResponse confirms deletion
+type DeleteShareResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteShareResponse) Reset() {
+	*x = DeleteShareResponse{}
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteShareResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteShareResponse) ProtoMessage() {}
+
+func (x *DeleteShareResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteShareResponse.ProtoReflect.Descriptor instead.
+func (*DeleteShareResponse) Descriptor() ([]byte, []int) {
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeleteShareResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *DeleteShareResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 // HealthCheckRequest is empty
 type HealthCheckRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -131,7 +365,7 @@ type HealthCheckRequest struct {
 
 func (x *HealthCheckRequest) Reset() {
 	*x = HealthCheckRequest{}
-	mi := &file_proto_shareservice_v1_share_proto_msgTypes[2]
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -143,7 +377,7 @@ func (x *HealthCheckRequest) String() string {
 func (*HealthCheckRequest) ProtoMessage() {}
 
 func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_shareservice_v1_share_proto_msgTypes[2]
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -156,7 +390,7 @@ func (x *HealthCheckRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheckRequest.ProtoReflect.Descriptor instead.
 func (*HealthCheckRequest) Descriptor() ([]byte, []int) {
-	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{2}
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{6}
 }
 
 // HealthCheckResponse indicates server health
@@ -174,7 +408,7 @@ type HealthCheckResponse struct {
 
 func (x *HealthCheckResponse) Reset() {
 	*x = HealthCheckResponse{}
-	mi := &file_proto_shareservice_v1_share_proto_msgTypes[3]
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -186,7 +420,7 @@ func (x *HealthCheckResponse) String() string {
 func (*HealthCheckResponse) ProtoMessage() {}
 
 func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_shareservice_v1_share_proto_msgTypes[3]
+	mi := &file_proto_shareservice_v1_share_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -199,7 +433,7 @@ func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HealthCheckResponse.ProtoReflect.Descriptor instead.
 func (*HealthCheckResponse) Descriptor() ([]byte, []int) {
-	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{3}
+	return file_proto_shareservice_v1_share_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *HealthCheckResponse) GetHealthy() bool {
@@ -227,19 +461,39 @@ var File_proto_shareservice_v1_share_proto protoreflect.FileDescriptor
 
 const file_proto_shareservice_v1_share_proto_rawDesc = "" +
 	"\n" +
-	"!proto/shareservice/v1/share.proto\x12\x0fshareservice.v1\"@\n" +
+	"!proto/shareservice/v1/share.proto\x12\x0fshareservice.v1\"a\n" +
 	"\x0fGetShareRequest\x12-\n" +
-	"\x12requester_identity\x18\x01 \x01(\tR\x11requesterIdentity\"E\n" +
+	"\x12requester_identity\x18\x01 \x01(\tR\x11requesterIdentity\x12\x1f\n" +
+	"\vsecret_name\x18\x02 \x01(\tR\n" +
+	"secretName\"E\n" +
 	"\x10GetShareResponse\x12\x14\n" +
 	"\x05share\x18\x01 \x01(\fR\x05share\x12\x1b\n" +
-	"\tserver_id\x18\x02 \x01(\tR\bserverId\"\x14\n" +
+	"\tserver_id\x18\x02 \x01(\tR\bserverId\"y\n" +
+	"\x11StoreShareRequest\x12\x1f\n" +
+	"\vsecret_name\x18\x01 \x01(\tR\n" +
+	"secretName\x12\x14\n" +
+	"\x05share\x18\x02 \x01(\fR\x05share\x12-\n" +
+	"\x12requester_identity\x18\x03 \x01(\tR\x11requesterIdentity\"H\n" +
+	"\x12StoreShareResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"d\n" +
+	"\x12DeleteShareRequest\x12\x1f\n" +
+	"\vsecret_name\x18\x01 \x01(\tR\n" +
+	"secretName\x12-\n" +
+	"\x12requester_identity\x18\x02 \x01(\tR\x11requesterIdentity\"I\n" +
+	"\x13DeleteShareResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x14\n" +
 	"\x12HealthCheckRequest\"f\n" +
 	"\x13HealthCheckResponse\x12\x18\n" +
 	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x1b\n" +
 	"\tserver_id\x18\x02 \x01(\tR\bserverId\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage2\xb9\x01\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage2\xea\x02\n" +
 	"\fShareService\x12O\n" +
-	"\bGetShare\x12 .shareservice.v1.GetShareRequest\x1a!.shareservice.v1.GetShareResponse\x12X\n" +
+	"\bGetShare\x12 .shareservice.v1.GetShareRequest\x1a!.shareservice.v1.GetShareResponse\x12U\n" +
+	"\n" +
+	"StoreShare\x12\".shareservice.v1.StoreShareRequest\x1a#.shareservice.v1.StoreShareResponse\x12X\n" +
+	"\vDeleteShare\x12#.shareservice.v1.DeleteShareRequest\x1a$.shareservice.v1.DeleteShareResponse\x12X\n" +
 	"\vHealthCheck\x12#.shareservice.v1.HealthCheckRequest\x1a$.shareservice.v1.HealthCheckResponseB)Z'hyena-k8s/proto/shareservice/v1;sharev1b\x06proto3"
 
 var (
@@ -254,20 +508,28 @@ func file_proto_shareservice_v1_share_proto_rawDescGZIP() []byte {
 	return file_proto_shareservice_v1_share_proto_rawDescData
 }
 
-var file_proto_shareservice_v1_share_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_shareservice_v1_share_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_shareservice_v1_share_proto_goTypes = []any{
 	(*GetShareRequest)(nil),     // 0: shareservice.v1.GetShareRequest
 	(*GetShareResponse)(nil),    // 1: shareservice.v1.GetShareResponse
-	(*HealthCheckRequest)(nil),  // 2: shareservice.v1.HealthCheckRequest
-	(*HealthCheckResponse)(nil), // 3: shareservice.v1.HealthCheckResponse
+	(*StoreShareRequest)(nil),   // 2: shareservice.v1.StoreShareRequest
+	(*StoreShareResponse)(nil),  // 3: shareservice.v1.StoreShareResponse
+	(*DeleteShareRequest)(nil),  // 4: shareservice.v1.DeleteShareRequest
+	(*DeleteShareResponse)(nil), // 5: shareservice.v1.DeleteShareResponse
+	(*HealthCheckRequest)(nil),  // 6: shareservice.v1.HealthCheckRequest
+	(*HealthCheckResponse)(nil), // 7: shareservice.v1.HealthCheckResponse
 }
 var file_proto_shareservice_v1_share_proto_depIdxs = []int32{
 	0, // 0: shareservice.v1.ShareService.GetShare:input_type -> shareservice.v1.GetShareRequest
-	2, // 1: shareservice.v1.ShareService.HealthCheck:input_type -> shareservice.v1.HealthCheckRequest
-	1, // 2: shareservice.v1.ShareService.GetShare:output_type -> shareservice.v1.GetShareResponse
-	3, // 3: shareservice.v1.ShareService.HealthCheck:output_type -> shareservice.v1.HealthCheckResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	2, // 1: shareservice.v1.ShareService.StoreShare:input_type -> shareservice.v1.StoreShareRequest
+	4, // 2: shareservice.v1.ShareService.DeleteShare:input_type -> shareservice.v1.DeleteShareRequest
+	6, // 3: shareservice.v1.ShareService.HealthCheck:input_type -> shareservice.v1.HealthCheckRequest
+	1, // 4: shareservice.v1.ShareService.GetShare:output_type -> shareservice.v1.GetShareResponse
+	3, // 5: shareservice.v1.ShareService.StoreShare:output_type -> shareservice.v1.StoreShareResponse
+	5, // 6: shareservice.v1.ShareService.DeleteShare:output_type -> shareservice.v1.DeleteShareResponse
+	7, // 7: shareservice.v1.ShareService.HealthCheck:output_type -> shareservice.v1.HealthCheckResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -284,7 +546,7 @@ func file_proto_shareservice_v1_share_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_shareservice_v1_share_proto_rawDesc), len(file_proto_shareservice_v1_share_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

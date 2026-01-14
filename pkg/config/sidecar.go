@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+// SecretMapping defines a secret to fetch and where to write it
+type SecretMapping struct {
+	Name       string // Secret name in the system
+	OutputPath string // Where to write the reconstructed secret
+}
+
 // SidecarConfig holds configuration for the sidecar reconstructor
 type SidecarConfig struct {
 	// ServerEndpoints is a list of share server addresses
@@ -15,8 +21,11 @@ type SidecarConfig struct {
 	// Threshold is the minimum number of shares needed (K)
 	Threshold int
 	
-	// OutputPath is where the reconstructed secret will be written
-	OutputPath string
+	// Secrets is a list of secrets to fetch (supports multiple secrets)
+	Secrets []SecretMapping
+	
+	// OutputDir is the base directory for secrets (used if Secrets is empty)
+	OutputDir string
 	
 	// Timeout for each share fetch request
 	Timeout time.Duration
@@ -40,13 +49,55 @@ type SidecarConfig struct {
 // LoadSidecarConfig loads configuration from environment variables
 func LoadSidecarConfig() (*SidecarConfig, error) {
 	cfg := &SidecarConfig{
-		OutputPath:              getEnvOrDefault("SECRET_OUTPUT_PATH", "/secrets/secret"),
+		OutputDir:               getEnvOrDefault("SECRETS_DIR", "/secrets"),
 		Threshold:               getEnvAsIntOrDefault("THRESHOLD", 3),
 		MaxRetries:              getEnvAsIntOrDefault("MAX_RETRIES", 3),
 		TLSInsecure:             getEnvAsBoolOrDefault("TLS_INSECURE", true),
 		TLSCAPath:               getEnvOrDefault("TLS_CA_PATH", ""),
 		ServiceAccountTokenPath: getEnvOrDefault("SERVICE_ACCOUNT_TOKEN_PATH", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
 		RequesterIdentity:       getEnvOrDefault("REQUESTER_IDENTITY", ""),
+	}
+
+	// Parse secret mappings from SECRETS environment variable
+	// Format: "name1:path1,name2:path2,..." or just "name1,name2,..." (uses default paths)
+	secretsStr := getEnvOrDefault("SECRETS", "")
+	if secretsStr == "" {
+		// Backwards compatibility: single secret mode
+		secretName := getEnvOrDefault("SECRET_NAME", "")
+		if secretName != "" {
+			outputPath := getEnvOrDefault("SECRET_OUTPUT_PATH", cfg.OutputDir+"/"+secretName)
+			cfg.Secrets = []SecretMapping{{
+				Name:       secretName,
+				OutputPath: outputPath,
+			}}
+		}
+	} else {
+		// Parse multiple secrets
+		secretEntries := strings.Split(secretsStr, ",")
+		for _, entry := range secretEntries {
+			entry = strings.TrimSpace(entry)
+			if entry == "" {
+				continue
+			}
+			
+			// Check if it has a custom path (name:path format)
+			parts := strings.SplitN(entry, ":", 2)
+			secretName := strings.TrimSpace(parts[0])
+			outputPath := cfg.OutputDir + "/" + secretName
+			
+			if len(parts) == 2 && parts[1] != "" {
+				outputPath = strings.TrimSpace(parts[1])
+			}
+			
+			cfg.Secrets = append(cfg.Secrets, SecretMapping{
+				Name:       secretName,
+				OutputPath: outputPath,
+			})
+		}
+	}
+
+	if len(cfg.Secrets) == 0 {
+		return nil, fmt.Errorf("no secrets configured (set SECRETS or SECRET_NAME environment variable)")
 	}
 
 	// Parse timeout

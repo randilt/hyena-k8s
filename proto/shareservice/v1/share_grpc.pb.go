@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	ShareService_GetShare_FullMethodName    = "/shareservice.v1.ShareService/GetShare"
+	ShareService_StoreShare_FullMethodName  = "/shareservice.v1.ShareService/StoreShare"
+	ShareService_DeleteShare_FullMethodName = "/shareservice.v1.ShareService/DeleteShare"
 	ShareService_HealthCheck_FullMethodName = "/shareservice.v1.ShareService/HealthCheck"
 )
 
@@ -29,8 +31,12 @@ const (
 //
 // ShareService provides access to secret shares with authentication
 type ShareServiceClient interface {
-	// GetShare returns the share stored by this server
+	// GetShare returns the share stored by this server for a given secret
 	GetShare(ctx context.Context, in *GetShareRequest, opts ...grpc.CallOption) (*GetShareResponse, error)
+	// StoreShare stores a share for a given secret (admin only)
+	StoreShare(ctx context.Context, in *StoreShareRequest, opts ...grpc.CallOption) (*StoreShareResponse, error)
+	// DeleteShare removes a share for a given secret (admin only)
+	DeleteShare(ctx context.Context, in *DeleteShareRequest, opts ...grpc.CallOption) (*DeleteShareResponse, error)
 	// HealthCheck verifies the server is healthy and ready to serve
 	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 }
@@ -53,6 +59,26 @@ func (c *shareServiceClient) GetShare(ctx context.Context, in *GetShareRequest, 
 	return out, nil
 }
 
+func (c *shareServiceClient) StoreShare(ctx context.Context, in *StoreShareRequest, opts ...grpc.CallOption) (*StoreShareResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StoreShareResponse)
+	err := c.cc.Invoke(ctx, ShareService_StoreShare_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *shareServiceClient) DeleteShare(ctx context.Context, in *DeleteShareRequest, opts ...grpc.CallOption) (*DeleteShareResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteShareResponse)
+	err := c.cc.Invoke(ctx, ShareService_DeleteShare_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *shareServiceClient) HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HealthCheckResponse)
@@ -69,8 +95,12 @@ func (c *shareServiceClient) HealthCheck(ctx context.Context, in *HealthCheckReq
 //
 // ShareService provides access to secret shares with authentication
 type ShareServiceServer interface {
-	// GetShare returns the share stored by this server
+	// GetShare returns the share stored by this server for a given secret
 	GetShare(context.Context, *GetShareRequest) (*GetShareResponse, error)
+	// StoreShare stores a share for a given secret (admin only)
+	StoreShare(context.Context, *StoreShareRequest) (*StoreShareResponse, error)
+	// DeleteShare removes a share for a given secret (admin only)
+	DeleteShare(context.Context, *DeleteShareRequest) (*DeleteShareResponse, error)
 	// HealthCheck verifies the server is healthy and ready to serve
 	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	mustEmbedUnimplementedShareServiceServer()
@@ -85,6 +115,12 @@ type UnimplementedShareServiceServer struct{}
 
 func (UnimplementedShareServiceServer) GetShare(context.Context, *GetShareRequest) (*GetShareResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetShare not implemented")
+}
+func (UnimplementedShareServiceServer) StoreShare(context.Context, *StoreShareRequest) (*StoreShareResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StoreShare not implemented")
+}
+func (UnimplementedShareServiceServer) DeleteShare(context.Context, *DeleteShareRequest) (*DeleteShareResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteShare not implemented")
 }
 func (UnimplementedShareServiceServer) HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HealthCheck not implemented")
@@ -128,6 +164,42 @@ func _ShareService_GetShare_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ShareService_StoreShare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreShareRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShareServiceServer).StoreShare(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ShareService_StoreShare_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShareServiceServer).StoreShare(ctx, req.(*StoreShareRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ShareService_DeleteShare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteShareRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShareServiceServer).DeleteShare(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ShareService_DeleteShare_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShareServiceServer).DeleteShare(ctx, req.(*DeleteShareRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ShareService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HealthCheckRequest)
 	if err := dec(in); err != nil {
@@ -156,6 +228,14 @@ var ShareService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetShare",
 			Handler:    _ShareService_GetShare_Handler,
+		},
+		{
+			MethodName: "StoreShare",
+			Handler:    _ShareService_StoreShare_Handler,
+		},
+		{
+			MethodName: "DeleteShare",
+			Handler:    _ShareService_DeleteShare_Handler,
 		},
 		{
 			MethodName: "HealthCheck",

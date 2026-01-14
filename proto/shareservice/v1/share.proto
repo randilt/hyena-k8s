@@ -6,17 +6,26 @@ option go_package = "hyena-k8s/proto/shareservice/v1;sharev1";
 
 // ShareService provides access to secret shares with authentication
 service ShareService {
-  // GetShare returns the share stored by this server
+  // GetShare returns the share stored by this server for a given secret
   rpc GetShare(GetShareRequest) returns (GetShareResponse);
+  
+  // StoreShare stores a share for a given secret (admin only)
+  rpc StoreShare(StoreShareRequest) returns (StoreShareResponse);
+  
+  // DeleteShare removes a share for a given secret (admin only)
+  rpc DeleteShare(DeleteShareRequest) returns (DeleteShareResponse);
   
   // HealthCheck verifies the server is healthy and ready to serve
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
 
-// GetShareRequest contains the identity of the requester
+// GetShareRequest contains the identity of the requester and secret name
 message GetShareRequest {
   // requester_identity is the ServiceAccount identity (namespace:sa-name)
   string requester_identity = 1;
+  
+  // secret_name identifies which secret to retrieve the share for
+  string secret_name = 2;
 }
 
 // GetShareResponse contains the encrypted share data
@@ -26,6 +35,39 @@ message GetShareResponse {
   
   // server_id identifies which share server this is
   string server_id = 2;
+}
+
+// StoreShareRequest stores a share on this server
+message StoreShareRequest {
+  // secret_name identifies which secret this share belongs to
+  string secret_name = 1;
+  
+  // share is the share data to store
+  bytes share = 2;
+  
+  // requester_identity is the admin identity
+  string requester_identity = 3;
+}
+
+// StoreShareResponse confirms storage
+message StoreShareResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// DeleteShareRequest removes a share
+message DeleteShareRequest {
+  // secret_name identifies which secret to delete
+  string secret_name = 1;
+  
+  // requester_identity is the admin identity
+  string requester_identity = 2;
+}
+
+// DeleteShareResponse confirms deletion
+message DeleteShareResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // HealthCheckRequest is empty

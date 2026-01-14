@@ -16,21 +16,6 @@ spec:
       labels:
         {{- include "hyena.shareServer.selectorLabels" . | nindent 8 }}
     spec:
-      initContainers:
-      - name: load-share
-        image: busybox:latest
-        command:
-        - sh
-        - -c
-        - |
-          ORDINAL=${HOSTNAME##*-}
-          cp /share-secrets/share-${ORDINAL}.bin /secrets/share.bin
-        volumeMounts:
-        - name: share-secrets
-          mountPath: /share-secrets
-          readOnly: true
-        - name: share-data
-          mountPath: /secrets
       containers:
       - name: share-server
         image: "{{ .Values.shareServer.image.repository }}:{{ .Values.shareServer.image.tag }}"
@@ -46,18 +31,12 @@ spec:
               fieldPath: metadata.name
         - name: PORT
           value: "{{ .Values.shareServer.port }}"
-        - name: SHARE_FILE
-          value: "/secrets/share.bin"
         - name: ALLOWED_CALLERS
           value: "{{ .Release.Namespace }}:{{ include "hyena.serviceAccountName" . }}"
         - name: DEV_MODE
           value: "{{ .Values.shareServer.devMode }}"
         - name: TLS_ENABLED
           value: "{{ .Values.shareServer.tls.enabled }}"
-        volumeMounts:
-        - name: share-data
-          mountPath: /secrets
-          readOnly: true
         resources:
           {{- toYaml .Values.shareServer.resources | nindent 10 }}
         livenessProbe:
@@ -76,9 +55,4 @@ spec:
             - "true"
           initialDelaySeconds: 5
           periodSeconds: 10
-      volumes:
-      - name: share-secrets
-        secret:
-          secretName: {{ include "hyena.fullname" . }}-shares
-      - name: share-data
-        emptyDir: {}
+

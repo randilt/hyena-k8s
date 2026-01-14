@@ -58,6 +58,15 @@ app.kubernetes.io/component: share-server
 {{- end }}
 
 {{/*
+Secret manager selector labels
+*/}}
+{{- define "hyena.secretManager.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "hyena.name" . }}-secret-manager
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: secret-manager
+{{- end }}
+
+{{/*
 Demo app selector labels
 */}}
 {{- define "hyena.demoApp.selectorLabels" -}}

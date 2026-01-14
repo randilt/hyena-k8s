@@ -20,10 +20,13 @@ proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/shareservice/v1/share.proto
+	protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		proto/secretmanager/v1/secret_manager.proto
 	@echo "✓ Proto generation complete"
 
 # Build all binaries
-build: build-share-server build-sidecar build-split-secret build-demo-app
+build: build-share-server build-sidecar build-split-secret build-demo-app build-secret-manager
 
 build-share-server:
 	@echo "Building share-server..."
@@ -45,8 +48,13 @@ build-demo-app:
 	@mkdir -p bin
 	go build -o bin/demo-app ./examples/demo-app
 
+build-secret-manager:
+	@echo "Building secret-manager..."
+	@mkdir -p bin
+	go build -o bin/secret-manager ./cmd/secret-manager
+
 # Docker images
-docker: docker-share-server docker-sidecar docker-demo-app
+docker: docker-share-server docker-sidecar docker-demo-app docker-secret-manager
 
 docker-share-server:
 	@echo "Building share-server Docker image..."
@@ -59,6 +67,10 @@ docker-sidecar:
 docker-demo-app:
 	@echo "Building demo-app Docker image..."
 	docker build -t hyena/demo-app:latest -f examples/demo-app/Dockerfile .
+
+docker-secret-manager:
+	@echo "Building secret-manager Docker image..."
+	docker build -t hyena/secret-manager:latest -f cmd/secret-manager/Dockerfile .
 
 # Test
 test:

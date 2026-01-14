@@ -57,10 +57,8 @@ func LoadShareServerConfig() (*ShareServerConfig, error) {
 		InsecureSkipVerify: false, // Never skip verify on server
 	}
 
-	// Validate share file exists
-	if _, err := os.Stat(cfg.ShareFile); err != nil {
-		return nil, fmt.Errorf("share file not found: %w", err)
-	}
+	// ShareFile is now optional - shares are stored in memory
+	// This allows for dynamic share management
 
 	return cfg, nil
 }

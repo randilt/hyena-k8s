@@ -40,8 +40,11 @@ func (i *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		// Skip auth for health check
-		if strings.HasSuffix(info.FullMethod, "HealthCheck") {
+		// Skip auth for health check and admin methods (StoreShare, DeleteShare)
+		if strings.HasSuffix(info.FullMethod, "HealthCheck") ||
+			strings.HasSuffix(info.FullMethod, "StoreShare") ||
+			strings.HasSuffix(info.FullMethod, "DeleteShare") {
+			log.Printf("AUTH SKIPPED for admin method: %s", info.FullMethod)
 			return handler(ctx, req)
 		}
 
@@ -96,8 +99,10 @@ func (i *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 		// But implementing for completeness
 		ctx := ss.Context()
 		
-		// Skip auth for health check
-		if strings.HasSuffix(info.FullMethod, "HealthCheck") {
+		// Skip auth for health check and admin methods
+		if strings.HasSuffix(info.FullMethod, "HealthCheck") ||
+			strings.HasSuffix(info.FullMethod, "StoreShare") ||
+			strings.HasSuffix(info.FullMethod, "DeleteShare") {
 			return handler(srv, ss)
 		}
 

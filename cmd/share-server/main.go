@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"google.golang.org/grpc"
@@ -21,20 +22,60 @@ import (
 // shareServer implements the ShareService gRPC service
 type shareServer struct {
 	pb.UnimplementedShareServiceServer
-	serverID  string
-	shareData []byte
+	serverID string
+	shares   map[string][]byte // secretName -> shareData
+	mu       sync.RWMutex
 }
 
-// GetShare returns the share stored by this server
+// GetShare returns the share stored by this server for a given secret
 func (s *shareServer) GetShare(ctx context.Context, req *pb.GetShareRequest) (*pb.GetShareResponse, error) {
-	log.Printf("GetShare request from: %s", req.RequesterIdentity)
+	log.Printf("GetShare request for secret '%s' from: %s", req.SecretName, req.RequesterIdentity)
 	
-	// The authentication is already handled by the interceptor
-	// If we reach here, the caller is authorized
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
+	share, exists := s.shares[req.SecretName]
+	if !exists {
+		return nil, fmt.Errorf("secret '%s' not found on this server", req.SecretName)
+	}
 	
 	return &pb.GetShareResponse{
-		Share:    s.shareData,
+		Share:    share,
 		ServerId: s.serverID,
+	}, nil
+}
+
+// StoreShare stores a share for a given secret (admin only)
+func (s *shareServer) StoreShare(ctx context.Context, req *pb.StoreShareRequest) (*pb.StoreShareResponse, error) {
+	log.Printf("StoreShare request for secret '%s' from: %s", req.SecretName, req.RequesterIdentity)
+	
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	
+	s.shares[req.SecretName] = req.Share
+	
+	log.Printf("Stored share for secret '%s' (%d bytes)", req.SecretName, len(req.Share))
+	
+	return &pb.StoreShareResponse{
+		Success: true,
+		Message: fmt.Sprintf("Share stored successfully on %s", s.serverID),
+	}, nil
+}
+
+// DeleteShare removes a share for a given secret (admin only)
+func (s *shareServer) DeleteShare(ctx context.Context, req *pb.DeleteShareRequest) (*pb.DeleteShareResponse, error) {
+	log.Printf("DeleteShare request for secret '%s' from: %s", req.SecretName, req.RequesterIdentity)
+	
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	
+	delete(s.shares, req.SecretName)
+	
+	log.Printf("Deleted share for secret '%s'", req.SecretName)
+	
+	return &pb.DeleteShareResponse{
+		Success: true,
+		Message: fmt.Sprintf("Share deleted successfully from %s", s.serverID),
 	}, nil
 }
 
@@ -58,17 +99,9 @@ func main() {
 
 	log.Printf("Server ID: %s", cfg.ServerID)
 	log.Printf("Port: %d", cfg.Port)
-	log.Printf("Share file: %s", cfg.ShareFile)
 	log.Printf("Allowed callers: %v", cfg.AllowedCallers)
 	log.Printf("Dev mode: %t", cfg.DevMode)
 	log.Printf("TLS enabled: %t", cfg.TLS.Enabled)
-
-	// Load share data
-	shareData, err := os.ReadFile(cfg.ShareFile)
-	if err != nil {
-		log.Fatalf("Failed to read share file: %v", err)
-	}
-	log.Printf("Loaded share data: %d bytes", len(shareData))
 
 	// Create auth validator
 	validator := auth.NewValidator(cfg.DevMode)
@@ -101,8 +134,8 @@ func main() {
 
 	// Register service
 	server := &shareServer{
-		serverID:  cfg.ServerID,
-		shareData: shareData,
+		serverID: cfg.ServerID,
+		shares:   make(map[string][]byte),
 	}
 	pb.RegisterShareServiceServer(grpcServer, server)
 

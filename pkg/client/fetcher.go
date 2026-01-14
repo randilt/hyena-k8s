@@ -24,6 +24,9 @@ type ShareFetcher struct {
 	// Threshold is the minimum number of shares needed (K)
 	Threshold int
 	
+	// SecretName is the name of the secret to fetch
+	SecretName string
+	
 	// Timeout is the timeout for each fetch request
 	Timeout time.Duration
 	
@@ -173,6 +176,7 @@ func (f *ShareFetcher) fetchAttempt(ctx context.Context, endpoint string) ([]byt
 	// Make request
 	req := &pb.GetShareRequest{
 		RequesterIdentity: f.RequesterIdentity,
+		SecretName:        f.SecretName,
 	}
 
 	resp, err := client.GetShare(ctx, req)
