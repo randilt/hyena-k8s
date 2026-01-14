@@ -26,54 +26,42 @@ graph TB
             app["Application Container<br/>• Reads from tmpfs<br/>• Exposes /verify endpoints"]
             tmpfs["tmpfs Volume (Memory Only)<br/>/secrets/db-password<br/>/secrets/api-key<br/>/secrets/jwt-token"]
             sidecar["Init Container (Sidecar)<br/>• Fetches K=3 shares<br/>• Reconstructs secrets<br/>• Writes to tmpfs"]
-            
+
             sidecar -->|"writes"| tmpfs
             tmpfs -->|"reads"| app
         end
-        
+
         sm["Secret Manager<br/>HTTP API<br/>POST /store"]
-        
+
         ss0["Share Server 0<br/>(in-memory)"]
         ss1["Share Server 1<br/>(in-memory)"]
         ss2["Share Server 2<br/>(in-memory)"]
         ss3["Share Server 3<br/>(in-memory)"]
         ss4["Share Server 4<br/>(in-memory)"]
-        
+
         sm -->|"gRPC<br/>StoreShare"| ss0
         sm -->|"gRPC<br/>StoreShare"| ss1
         sm -->|"gRPC<br/>StoreShare"| ss2
         sm -->|"gRPC<br/>StoreShare"| ss3
         sm -->|"gRPC<br/>StoreShare"| ss4
-        
+
         ss0 -.->|"gRPC+JWT<br/>GetShare"| sidecar
         ss1 -.->|"gRPC+JWT<br/>GetShare"| sidecar
         ss2 -.->|"gRPC+JWT<br/>GetShare"| sidecar
         ss3 -.->|"gRPC+JWT<br/>GetShare"| sidecar
         ss4 -.->|"gRPC+JWT<br/>GetShare"| sidecar
     end
-    
+
     user["User/Operator"] -->|"curl POST /store<br/>name=secret&data=value"| sm
     client["Client"] -->|"HTTP GET<br/>/status<br/>/verify/secret"| app
-    
-    style sm fill:#e1f5ff
-    style ss0 fill:#fff4e6
-    style ss1 fill:#fff4e6
-    style ss2 fill:#fff4e6
-    style ss3 fill:#fff4e6
-    style ss4 fill:#fff4e6
-    style sidecar fill:#f3e5f5
-    style tmpfs fill:#e8f5e9
-    style app fill:#e3f2fd
-    style k8s fill:#fafafa,stroke:#333,stroke-width:2px
-    style pod fill:#f5f5f5,stroke:#666,stroke-width:1px
 ```
 
 **Flow:**
+
 1. 📥 **Store Secret**: User POSTs secret to Secret Manager → splits into N=5 shares → distributes to all share servers
 2. 🔐 **Runtime Fetch**: Init container fetches K=3 shares via gRPC+JWT → reconstructs secret → writes to tmpfs
 3. ✅ **App Access**: Application reads secrets from tmpfs → exposes verification endpoints
 4. 🔍 **Verify**: Client can verify reconstruction correctness via SHA256 hashes
-
 
 ## Features
 
