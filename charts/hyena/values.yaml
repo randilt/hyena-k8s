@@ -96,7 +96,7 @@ demoApp:
 
   # List of secrets to fetch (comma-separated)
   # Format: "secret1,secret2" or "secret1:/path1,secret2:/path2"
-  secrets: "db-password,api-key"
+  secrets: "db-password,api-key,jwt-token"
 
   image:
     repository: hyena/demo-app

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -13,10 +15,12 @@ import (
 
 // SecretInfo holds information about a loaded secret
 type SecretInfo struct {
-	Name   string `json:"name"`
-	Length int    `json:"length"`
-	Loaded bool   `json:"loaded"`
-	Path   string `json:"path"`
+	Name      string `json:"name"`
+	Length    int    `json:"length"`
+	Loaded    bool   `json:"loaded"`
+	Path      string `json:"path"`
+	SHA256    string `json:"sha256,omitempty"`    // Hash for verification
+	FirstBytes string `json:"first_bytes,omitempty"` // First 20 chars for quick verification
 }
 
 // StatusResponse represents the JSON response for the /status endpoint
@@ -51,6 +55,7 @@ func main() {
 	http.HandleFunc("/status", statusHandler)
 	http.HandleFunc("/secrets", secretsListHandler)
 	http.HandleFunc("/secret/", secretGetHandler)
+	http.HandleFunc("/verify/", verifyHandler)
 	http.HandleFunc("/", rootHandler)
 
 	// Start server
@@ -62,11 +67,12 @@ func main() {
 	addr := fmt.Sprintf(":%s", port)
 	log.Printf("Demo application listening on %s", addr)
 	log.Printf("Endpoints:")
-	log.Printf("  GET /health         - Health check")
-	log.Printf("  GET /status         - Overall status")
-	log.Printf("  GET /secrets        - List all secrets")
-	log.Printf("  GET /secret/<name>  - Get specific secret info")
-	log.Printf("  GET /               - Welcome message")
+	log.Printf("  GET /health            - Health check")
+	log.Printf("  GET /status            - Overall status")
+	log.Printf("  GET /secrets           - List all secrets")
+	log.Printf("  GET /secret/<name>     - Get specific secret info")
+	log.Printf("  GET /verify/<name>     - Verify secret reconstruction with hash")
+	log.Printf("  GET /                  - Welcome message")
 
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
@@ -107,7 +113,20 @@ func loadSecrets(dir string) {
 		} else {
 			info.Loaded = true
 			info.Length = len(data)
-			log.Printf("✓ Secret '%s' loaded successfully (length: %d bytes)", secretName, len(data))
+			
+			// Calculate SHA256 hash for verification
+			hash := sha256.Sum256(data)
+			info.SHA256 = hex.EncodeToString(hash[:])
+			
+			// Store first 20 characters for quick visual verification (safe to expose)
+			if len(data) > 20 {
+				info.FirstBytes = string(data[:20]) + "..."
+			} else {
+				info.FirstBytes = string(data)
+			}
+			
+			log.Printf("✓ Secret '%s' loaded successfully (length: %d bytes, sha256: %s)", 
+				secretName, len(data), info.SHA256[:16]+"...")
 			// NEVER log the actual secret value
 		}
 
@@ -222,6 +241,42 @@ func secretGetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// verifyHandler returns verification information including SHA256 hash and first bytes
+func verifyHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract secret name from path
+	secretName := strings.TrimPrefix(r.URL.Path, "/verify/")
+	if secretName == "" {
+		http.Error(w, "Secret name required", http.StatusBadRequest)
+		return
+	}
+
+	info, exists := secrets[secretName]
+	if !exists {
+		http.Error(w, fmt.Sprintf("Secret '%s' not found", secretName), http.StatusNotFound)
+		return
+	}
+
+	if !info.Loaded {
+		http.Error(w, fmt.Sprintf("Secret '%s' failed to load", secretName), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	
+	response := map[string]interface{}{
+		"name":        info.Name,
+		"length":      info.Length,
+		"sha256":      info.SHA256,
+		"first_bytes": info.FirstBytes,
+		"verification_note": "Compare this SHA256 hash with the hash of your original secret to verify correct reconstruction",
+	}
+	
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding JSON: %v", err)
+	}
+}
+
 // rootHandler returns a welcome message
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -289,6 +344,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         <li><code>GET /status</code> - Returns JSON with all secrets status</li>
         <li><code>GET /secrets</code> - Returns list of secret names</li>
         <li><code>GET /secret/&lt;name&gt;</code> - Returns info about specific secret</li>
+        <li><code>GET /verify/&lt;name&gt;</code> - Returns SHA256 hash and first bytes for verification</li>
     </ul>
     
     <h2>Architecture</h2>
