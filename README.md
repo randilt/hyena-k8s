@@ -72,7 +72,7 @@ graph TB
 - ✅ **Multi-Secret Support** - Handle multiple secrets per application
 - ✅ **Runtime Reconstruction** - Secrets only exist in memory
 - ✅ **SHA256 Verification** - Cryptographic proof of correct reconstruction
-- ✅ **JWT Authentication** - Kubernetes ServiceAccount tokens
+- ✅ **JWT Authentication** - Kubernetes ServiceAccount tokens for GetShare (PoC: admin methods unauthenticated)
 - ✅ **gRPC Communication** - Efficient, type-safe protocol
 - ✅ **Tmpfs Volumes** - Secrets never touch disk
 - ✅ **Helm Deployment** - Easy installation
@@ -335,6 +335,7 @@ This is a **proof of concept**, not a production system. Missing features:
 - ❌ Performance optimization
 - ❌ Formal security audit
 - ❌ Production-grade error handling
+- ❌ **Authentication for admin operations** (StoreShare/DeleteShare skip auth in PoC)
 
 ## Comparison with Existing Solutions
 
