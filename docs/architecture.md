@@ -11,17 +11,20 @@ Hyena-K8s implements a decentralized secret management system using Shamir's Sec
 **Responsibility**: Store and serve a single SSS share with authentication.
 
 **Key Design Decisions**:
+
 - **Stateless**: Each server only knows its own share
 - **Authentication**: JWT validation using Kubernetes ServiceAccount tokens
 - **Protocol**: gRPC for efficiency and type safety
 - **Deployment**: StatefulSet for stable network identities
 
 **Data Flow**:
+
 ```
 Client Request → JWT Validation → Authorization Check → Serve Share
 ```
 
 **Configuration**:
+
 - `SERVER_ID`: Unique identifier
 - `SHARE_FILE`: Path to share data
 - `ALLOWED_CALLERS`: List of authorized identities
@@ -32,12 +35,14 @@ Client Request → JWT Validation → Authorization Check → Serve Share
 **Responsibility**: Fetch K shares and reconstruct the secret at pod startup.
 
 **Key Design Decisions**:
+
 - **Init Container**: Runs once before app starts
 - **Parallel Fetching**: Concurrent requests to all servers
 - **Retry Logic**: Exponential backoff for transient failures
 - **Fail Fast**: Exit with error if < K shares available
 
 **Algorithm**:
+
 ```
 1. Load configuration from environment
 2. Read ServiceAccount JWT token
@@ -54,6 +59,7 @@ Client Request → JWT Validation → Authorization Check → Serve Share
 ```
 
 **Exit Codes**:
+
 - `0`: Success
 - `1`: Configuration error
 - `2`: Token read error
@@ -66,6 +72,7 @@ Client Request → JWT Validation → Authorization Check → Serve Share
 **Responsibility**: Demonstrate secret consumption without exposing the value.
 
 **Key Features**:
+
 - Reads secret from tmpfs volume
 - Provides HTTP endpoints for status
 - **Never** logs or displays secret content
@@ -132,13 +139,13 @@ Application Pod
 ```
 Reconstruction happens in:
   - Init container memory
-  
+
 Written to:
   - tmpfs volume (RAM-backed filesystem)
-  
+
 Accessible by:
   - Application container (same pod)
-  
+
 Never written to:
   - Persistent volumes
   - Container layer
@@ -227,19 +234,20 @@ hyena-share-server (ClusterIP: None)
 
 ## Design Trade-offs
 
-| Aspect | Choice | Rationale | Trade-off |
-|--------|--------|-----------|-----------|
-| Init Container vs Sidecar | Init Container | One-time reconstruction | No rotation support |
-| gRPC vs HTTP | gRPC | Type safety, performance | Additional complexity |
-| Dev Mode vs Full JWT | Dev Mode default | Easier local testing | Security in non-prod |
-| Parallel vs Sequential | Parallel fetching | Faster reconstruction | More network connections |
-| StatefulSet vs Deployment | StatefulSet | Stable identities | Slightly slower rollout |
+| Aspect                    | Choice            | Rationale                | Trade-off                |
+| ------------------------- | ----------------- | ------------------------ | ------------------------ |
+| Init Container vs Sidecar | Init Container    | One-time reconstruction  | No rotation support      |
+| gRPC vs HTTP              | gRPC              | Type safety, performance | Additional complexity    |
+| Dev Mode vs Full JWT      | Dev Mode default  | Easier local testing     | Security in non-prod     |
+| Parallel vs Sequential    | Parallel fetching | Faster reconstruction    | More network connections |
+| StatefulSet vs Deployment | StatefulSet       | Stable identities        | Slightly slower rollout  |
 
 ## Extensibility Points
 
 ### Adding New Share Backends
 
 Implement `ShareProvider` interface:
+
 ```go
 type ShareProvider interface {
     GetShare(ctx context.Context, identity string) ([]byte, error)
@@ -249,6 +257,7 @@ type ShareProvider interface {
 ### Custom Authentication
 
 Implement `Validator` interface:
+
 ```go
 type Validator interface {
     ValidateToken(ctx context.Context, token string) (*Claims, error)

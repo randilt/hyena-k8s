@@ -53,6 +53,7 @@ curl $(minikube service hyena-demo-app --url)/status
 ```
 
 **Expected JSON response**:
+
 ```json
 {
   "secret_loaded": true,
@@ -116,6 +117,7 @@ kubectl get pod -l app.kubernetes.io/component=demo-app
 ```
 
 **Expected output**:
+
 ```
 NAME                          READY   STATUS                  RESTARTS   AGE
 hyena-demo-app-xxx            0/1     Init:Error              0          15s
@@ -128,6 +130,7 @@ kubectl logs -l app.kubernetes.io/component=demo-app -c sidecar-reconstructor
 ```
 
 **Expected log output**:
+
 ```
 FATAL: Failed to fetch shares: failed to collect enough shares: got 2, need 3 (errors: 3)
 ```
@@ -175,6 +178,7 @@ make demo
 ```
 
 This script will:
+
 1. Verify all pods are ready
 2. Show initial status (all working)
 3. Kill one server and verify app still works
@@ -207,6 +211,7 @@ kubectl logs $POD -c sidecar-reconstructor
 ```
 
 **Example successful output**:
+
 ```
 Starting sidecar reconstructor...
 Configuration loaded:
@@ -320,12 +325,14 @@ minikube stop
 **Problem**: Init container hasn't started or is hanging.
 
 **Debug**:
+
 ```bash
 kubectl describe pod -l app.kubernetes.io/component=demo-app
 kubectl logs -l app.kubernetes.io/component=demo-app -c sidecar-reconstructor
 ```
 
 **Common causes**:
+
 - Share servers not ready
 - Network issues
 - Configuration errors
@@ -335,12 +342,14 @@ kubectl logs -l app.kubernetes.io/component=demo-app -c sidecar-reconstructor
 **Problem**: Share server pods crash or restart.
 
 **Debug**:
+
 ```bash
 kubectl logs hyena-share-server-0
 kubectl describe pod hyena-share-server-0
 ```
 
 **Common causes**:
+
 - Share files not mounted (check secret)
 - Invalid configuration
 - Port conflicts
@@ -350,6 +359,7 @@ kubectl describe pod hyena-share-server-0
 **Problem**: `minikube service` command fails or times out.
 
 **Debug**:
+
 ```bash
 # Check service
 kubectl get svc hyena-demo-app

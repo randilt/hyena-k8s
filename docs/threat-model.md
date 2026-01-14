@@ -9,18 +9,22 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 ### Trusted Components
 
 1. **Kubernetes Control Plane**
+
    - Assumption: K8s API server correctly validates ServiceAccount tokens
    - Risk: If compromised, attacker can impersonate any identity
 
 2. **Container Runtime**
+
    - Assumption: Container isolation is effective
    - Risk: Container escape could expose tmpfs volumes
 
 3. **Linux Kernel**
+
    - Assumption: tmpfs provides memory-only storage
    - Risk: Kernel vulnerabilities could leak memory
 
 4. **Share Server Code**
+
    - Assumption: Share servers correctly implement authorization
    - Risk: Bugs could allow unauthorized access
 
@@ -31,6 +35,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 ### Untrusted Components
 
 1. **Application Code**
+
    - No assumptions about application security
    - Secret exposed via tmpfs is application's responsibility
 
@@ -58,7 +63,8 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 
 **Impact**: ⚠️ **SECRET COMPROMISED** - Can reconstruct full secret
 
-**Mitigation**: 
+**Mitigation**:
+
 - Network segmentation
 - RBAC to prevent pod exec
 - Monitoring and alerting
@@ -74,6 +80,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Can fetch shares as legitimate client
 
 **Mitigation**:
+
 - Short token expiration (configured to 1 hour)
 - Token audience validation (not implemented in dev mode)
 - Network policies to limit share server access
@@ -101,6 +108,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Can read shares from Secrets, reconstruct if ≥ K obtained
 
 **Mitigation**:
+
 - etcd encryption at rest
 - etcd access controls
 - Audit logging
@@ -116,6 +124,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Can steal shares in transit
 
 **Mitigation**:
+
 - TLS for gRPC (not enabled in default PoC)
 - Network policies
 
@@ -130,6 +139,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Can fetch shares if token not expired
 
 **Mitigation**:
+
 - Short token expiration
 - Nonce-based authentication (not implemented)
 
@@ -144,6 +154,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Can fetch shares and reconstruct secret
 
 **Mitigation**:
+
 - RBAC to restrict pod creation
 - Admission controllers (not implemented)
 - ServiceAccount token audience validation
@@ -171,6 +182,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 **Impact**: Application pods fail to start
 
 **Mitigation**:
+
 - Rate limiting (not implemented)
 - Resource quotas
 - Multiple server replicas
@@ -204,6 +216,7 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 ### External
 
 - **gRPC Endpoints**: Port 9000 on share servers
+
   - Attack Vector: Unauthorized share requests
   - Mitigation: JWT authentication, network policies
 
@@ -214,10 +227,12 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 ### Internal (Cluster)
 
 - **Pod-to-Pod**: Init container → Share servers
+
   - Attack Vector: Token theft, MITM
   - Mitigation: ServiceAccount tokens, TLS (optional)
 
 - **etcd**: Shares stored as Secrets
+
   - Attack Vector: Direct etcd access
   - Mitigation: etcd encryption, access controls
 
@@ -245,41 +260,50 @@ This threat model analyzes the security properties and limitations of Hyena-K8s 
 If this were to evolve to production (NOT CURRENT SCOPE):
 
 1. **Enable TLS**:
+
    - mTLS between all components
    - Certificate management via cert-manager
 
 2. **Implement Audit Logging**:
+
    - Log all share access attempts
    - Central log aggregation
    - Alert on suspicious patterns
 
 3. **Add Secret Rotation**:
+
    - Periodic share regeneration
    - Proactive secret sharing
 
 4. **Enhance Authentication**:
+
    - Full JWT signature verification
    - Token audience validation
    - Nonce-based replay protection
 
 5. **Formal Security Audit**:
+
    - Third-party penetration testing
    - Code security review
    - Cryptographic analysis
 
 6. **Implement VSS**:
+
    - Verifiable Secret Sharing
    - Detect tampered shares
 
 7. **Memory Protection**:
+
    - Encrypted memory regions
    - Secure enclaves (SGX, SEV)
 
 8. **Network Security**:
+
    - Strict NetworkPolicies
    - Service mesh (mutual TLS)
 
 9. **Monitoring and Alerting**:
+
    - Prometheus metrics
    - Failed authentication alerts
    - Anomaly detection
@@ -302,6 +326,7 @@ Hyena-K8s demonstrates the **feasibility** of threshold cryptography for Kuberne
 **Use this only for research, education, and non-sensitive testing.**
 
 For production workloads, use established solutions like:
+
 - HashiCorp Vault
 - AWS Secrets Manager
 - GCP Secret Manager

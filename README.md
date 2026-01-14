@@ -110,6 +110,7 @@ make demo
 ```
 
 This will demonstrate:
+
 1. ✅ App works with all 5 share servers
 2. ✅ App works with 4 servers (one killed)
 3. ❌ App fails with 2 servers (below threshold)
@@ -117,18 +118,21 @@ This will demonstrate:
 ## Components
 
 ### Share Server
+
 - **Purpose**: Stores and serves a single SSS share
 - **Authentication**: Validates JWT tokens from ServiceAccounts
 - **Protocol**: gRPC with TLS support (optional)
 - **Deployment**: StatefulSet with N replicas
 
 ### Sidecar Reconstructor (Init Container)
+
 - **Purpose**: Fetches shares and reconstructs the secret
 - **Behavior**: Runs once at pod startup
 - **Failure**: Pod fails if < K shares available
 - **Output**: Writes secret to tmpfs volume
 
 ### Demo Application
+
 - **Purpose**: Demonstrates secret consumption
 - **Endpoints**:
   - `GET /` - Web UI showing status
@@ -142,10 +146,10 @@ This will demonstrate:
 
 ```yaml
 shareServer:
-  replicaCount: 5      # N (total shares)
-  threshold: 3         # K (minimum shares needed)
-  devMode: true        # Skip JWT signature verification
-  
+  replicaCount: 5 # N (total shares)
+  threshold: 3 # K (minimum shares needed)
+  devMode: true # Skip JWT signature verification
+
 sidecar:
   timeout: "10s"
   maxRetries: 3
@@ -229,6 +233,7 @@ Creates 5 shares where any 3 can reconstruct the secret.
 ### 2. Share Distribution (Installation)
 
 Each share is stored in a separate share server pod:
+
 - `share-server-0` → Share 0
 - `share-server-1` → Share 1
 - `share-server-2` → Share 2
@@ -263,6 +268,7 @@ Application container reads secret from tmpfs volume.
 See [docs/threat-model.md](docs/threat-model.md) for detailed analysis.
 
 **Key Threats NOT Addressed** (by design scope):
+
 - Memory dumps or kernel exploits
 - Compromised share server code
 - Side-channel attacks
@@ -282,17 +288,18 @@ This is a **proof of concept**, not a production system. Missing features:
 
 ## Comparison with Existing Solutions
 
-| Feature | Hyena-K8s | Vault | Sealed Secrets |
-|---------|-----------|-------|----------------|
-| Centralized Store | ❌ | ✅ | ✅ |
-| Threshold Crypto | ✅ | ❌ | ❌ |
-| Runtime Reconstruction | ✅ | ❌ | ❌ |
-| Disk-less Secrets | ✅ | ❌ | ❌ |
-| Production Ready | ❌ | ✅ | ✅ |
+| Feature                | Hyena-K8s | Vault | Sealed Secrets |
+| ---------------------- | --------- | ----- | -------------- |
+| Centralized Store      | ❌        | ✅    | ✅             |
+| Threshold Crypto       | ✅        | ❌    | ❌             |
+| Runtime Reconstruction | ✅        | ❌    | ❌             |
+| Disk-less Secrets      | ✅        | ❌    | ❌             |
+| Production Ready       | ❌        | ✅    | ✅             |
 
 ## Contributing
 
 This is a research project. Contributions should focus on:
+
 - Bug fixes
 - Documentation improvements
 - Test coverage
@@ -303,6 +310,7 @@ Please maintain the project scope - this is a PoC, not a production system.
 ## License
 
 This project incorporates code from HashiCorp Vault's Shamir implementation:
+
 - `pkg/shamir/shamir.go` - Copyright IBM Corp. 2016, 2025 (MPL-2.0)
 
 All other code is provided as-is for educational and research purposes.
@@ -318,6 +326,7 @@ All other code is provided as-is for educational and research purposes.
 **This is NOT production-ready software.**
 
 Do not use this for:
+
 - Production workloads
 - Sensitive data
 - Compliance requirements
