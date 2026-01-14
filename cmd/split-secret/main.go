@@ -1,4 +1,4 @@
-package splitsecret
+package main
 
 import (
 	"encoding/base64"

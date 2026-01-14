@@ -1,4 +1,4 @@
-package shareserver
+package main
 
 import (
 	"context"
