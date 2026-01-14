@@ -2,6 +2,8 @@
 
 This guide will walk you through deploying and testing Hyena-K8s on a **fresh minikube cluster**.
 
+**Architecture Note**: This system uses a **dynamic vault-like architecture**. You first deploy the infrastructure (share servers + secret manager), then store secrets via HTTP API, and finally applications fetch and reconstruct them at runtime.
+
 ⏱️ **Time Required**: ~10 minutes
 
 ## Prerequisites
@@ -107,9 +109,16 @@ hyena-share-server-3                 1/1     Running    0          30s
 hyena-share-server-4                 1/1     Running    0          30s
 ```
 
-**Note**: The demo-app pod will be in `Init:0/1` or `CrashLoopBackOff` status because no secrets have been stored yet. This is expected!
+**Important Notes**:
 
-## Step 4: Store Secrets
+- ✅ Share servers are running but **empty** (no shares stored yet)
+- ✅ Secret manager is ready to receive secrets via HTTP API
+- ⚠️ Demo app is in `Init:0/1` or `CrashLoopBackOff` - **this is expected!** It can't start because no secrets exist yet
+- 📝 We'll store secrets in the next step, then the demo app will work
+
+## Step 4: Store Secrets (Dynamic Creation)
+
+Unlike traditional secret management where secrets are pre-loaded, Hyena-K8s uses a **dynamic architecture**. You store secrets after deployment, similar to HashiCorp Vault.
 
 Get the secret manager URL and store some secrets:
 
@@ -299,24 +308,39 @@ The system requires K=3 shares to reconstruct. Let's verify this works even with
 # Kill 2 share servers (we should still have 3/5 = OK)
 kubectl delete pod hyena-share-server-3 hyena-share-server-4
 
-# Restart demo app to test fetching with only 3 servers
+# Wait for them to restart (StatefulSet will recreate them but they'll be empty)
+sleep 5
+
+# Re-store secrets to all servers (including the new empty ones)
+curl -X POST "$SECRET_MANAGER_URL/store" \
+  -d "name=db-password&data=my-super-secret-database-password-12345"
+curl -X POST "$SECRET_MANAGER_URL/store" \
+  -d "name=api-key&data=my-api-key-xyz123-very-secret"
+curl -X POST "$SECRET_MANAGER_URL/store" \
+  -d "name=jwt-token&data=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ"
+
+# NOW kill 2 servers again
+kubectl delete pod hyena-share-server-3 hyena-share-server-4 --wait=false
+
+# Immediately restart demo app before they come back (only 3/5 available)
 kubectl delete pod -l app.kubernetes.io/component=demo-app
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=demo-app --timeout=60s
 
-# Check status - should still work!
+# Check status - should still work with just 3 servers!
 curl "$DEMO_APP_URL/status" | python3 -m json.tool
 ```
 
-✅ Demo app successfully reconstructed secrets with only 3 servers!
+✅ Demo app successfully reconstructed secrets with only 3 servers available!
 
 ```bash
-# Now kill one more server (down to 2/5 = FAIL)
-kubectl delete pod hyena-share-server-2
+# Now test the failure case: kill one more server (down to 2/5 = FAIL)
+kubectl delete pod hyena-share-server-2 --wait=false
 
 # Restart demo app - it should FAIL
 kubectl delete pod -l app.kubernetes.io/component=demo-app
 
-# Check pod status
+# Check pod status after a few seconds
+sleep 10
 kubectl get pod -l app.kubernetes.io/component=demo-app
 ```
 
