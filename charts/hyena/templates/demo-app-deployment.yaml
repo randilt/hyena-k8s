@@ -1,0 +1,90 @@
+{{- if .Values.demoApp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hyena.fullname" . }}-demo-app
+  labels:
+    {{- include "hyena.labels" . | nindent 4 }}
+    app.kubernetes.io/component: demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "hyena.demoApp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hyena.demoApp.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "hyena.serviceAccountName" . }}
+      initContainers:
+      - name: sidecar-reconstructor
+        image: "{{ .Values.sidecar.image.repository }}:{{ .Values.sidecar.image.tag }}"
+        imagePullPolicy: {{ .Values.sidecar.image.pullPolicy }}
+        env:
+        - name: SHARE_SERVER_ENDPOINTS
+          value: {{ range $i := until (int .Values.shareServer.replicaCount) }}{{ if $i }},{{ end }}{{ include "hyena.fullname" $ }}-share-server-{{ $i }}.{{ include "hyena.fullname" $ }}-share-server.{{ $.Release.Namespace }}.svc.cluster.local:{{ $.Values.shareServer.port }}{{ end }}
+        - name: THRESHOLD
+          value: "{{ .Values.shareServer.threshold }}"
+        - name: SECRET_OUTPUT_PATH
+          value: "/secrets/app-secret"
+        - name: TIMEOUT
+          value: "{{ .Values.sidecar.timeout }}"
+        - name: MAX_RETRIES
+          value: "{{ .Values.sidecar.maxRetries }}"
+        - name: TLS_INSECURE
+          value: "{{ .Values.sidecar.tls.insecure }}"
+        - name: SERVICE_ACCOUNT_TOKEN_PATH
+          value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        - name: REQUESTER_IDENTITY
+          value: "{{ .Release.Namespace }}:{{ include "hyena.serviceAccountName" . }}"
+        volumeMounts:
+        - name: secrets
+          mountPath: /secrets
+        - name: sa-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+        resources:
+          {{- toYaml .Values.sidecar.resources | nindent 10 }}
+      containers:
+      - name: demo-app
+        image: "{{ .Values.demoApp.image.repository }}:{{ .Values.demoApp.image.tag }}"
+        imagePullPolicy: {{ .Values.demoApp.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.demoApp.port }}
+          protocol: TCP
+        env:
+        - name: SECRET_PATH
+          value: "/secrets/app-secret"
+        - name: PORT
+          value: "{{ .Values.demoApp.port }}"
+        volumeMounts:
+        - name: secrets
+          mountPath: /secrets
+          readOnly: true
+        resources:
+          {{- toYaml .Values.demoApp.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: secrets
+        emptyDir:
+          medium: Memory  # tmpfs - secret never touches disk
+      - name: sa-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
+{{- end }}

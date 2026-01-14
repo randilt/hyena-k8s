@@ -1,0 +1,13 @@
+apiVersion: v2
+name: hyena
+description: Decentralized Runtime Secret Management using Shamir's Secret Sharing
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - security
+  - secrets
+  - shamir
+  - kubernetes
+maintainers:
+  - name: Hyena Project

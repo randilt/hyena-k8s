@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package shareservice.v1;
+
+option go_package = "hyena-k8s/proto/shareservice/v1;sharev1";
+
+// ShareService provides access to secret shares with authentication
+service ShareService {
+  // GetShare returns the share stored by this server
+  rpc GetShare(GetShareRequest) returns (GetShareResponse);
+  
+  // HealthCheck verifies the server is healthy and ready to serve
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// GetShareRequest contains the identity of the requester
+message GetShareRequest {
+  // requester_identity is the ServiceAccount identity (namespace:sa-name)
+  string requester_identity = 1;
+}
+
+// GetShareResponse contains the encrypted share data
+message GetShareResponse {
+  // share is the secret share data
+  bytes share = 1;
+  
+  // server_id identifies which share server this is
+  string server_id = 2;
+}
+
+// HealthCheckRequest is empty
+message HealthCheckRequest {}
+
+// HealthCheckResponse indicates server health
+message HealthCheckResponse {
+  // healthy indicates if the server is ready to serve shares
+  bool healthy = 1;
+  
+  // server_id identifies which share server this is
+  string server_id = 2;
+  
+  // message provides additional health information
+  string message = 3;
+}

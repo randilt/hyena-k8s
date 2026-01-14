@@ -1,0 +1,21 @@
+{{- if .Values.demoApp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hyena.fullname" . }}-demo-app
+  labels:
+    {{- include "hyena.labels" . | nindent 4 }}
+    app.kubernetes.io/component: demo-app
+spec:
+  type: {{ .Values.demoApp.service.type }}
+  ports:
+    - port: {{ .Values.demoApp.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.demoApp.service.type "NodePort") .Values.demoApp.service.nodePort }}
+      nodePort: {{ .Values.demoApp.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "hyena.demoApp.selectorLabels" . | nindent 4 }}
+{{- end }}

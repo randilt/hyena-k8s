@@ -1,0 +1,102 @@
+# Hyena-K8s Helm Chart Configuration
+
+# Share Server Configuration
+shareServer:
+  # Number of share server replicas (N)
+  replicaCount: 5
+
+  # Minimum shares needed for reconstruction (K)
+  threshold: 3
+
+  image:
+    repository: hyena/share-server
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # gRPC port
+  port: 9000
+
+  # Development mode (skip JWT signature verification)
+  devMode: true
+
+  # TLS configuration
+  tls:
+    enabled: false
+    # certPath: /certs/tls.crt
+    # keyPath: /certs/tls.key
+
+  # Resource limits
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# Sidecar (Init Container) Configuration
+sidecar:
+  image:
+    repository: hyena/sidecar
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Timeout for share fetch requests
+  timeout: "10s"
+
+  # Maximum retries per server
+  maxRetries: 3
+
+  # TLS configuration
+  tls:
+    insecure: true
+    # caPath: /certs/ca.crt
+
+  # Resource limits
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# Demo Application Configuration
+demoApp:
+  enabled: true
+
+  image:
+    repository: hyena/demo-app
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # HTTP port
+  port: 8080
+
+  # ServiceAccount for authentication
+  serviceAccount:
+    create: true
+    name: demo-app
+
+  # Resource limits
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "100m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+  # Service configuration
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30080
+
+# Secret to split (THIS SHOULD BE PROVIDED DURING INSTALLATION)
+# Example: helm install hyena ./charts/hyena --set-file secret.data=./my-secret.txt
+secret:
+  # The actual secret will be split during installation
+  # DO NOT put real secrets in this file
+  # Shares will be generated and stored in individual secrets
+  data: "ThisIsADemoSecretForTesting123!"
